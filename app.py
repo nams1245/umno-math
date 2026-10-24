@@ -10,8 +10,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 BASE = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
-if os.environ.get('RENDER') and not os.environ.get('SECRET_KEY'):
-    raise RuntimeError('На сервере требуется переменная окружения SECRET_KEY.')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(BASE, 'umno.db')).replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -201,7 +199,7 @@ def home():
     completed = sum(a.is_correct for a in attempts)
     assigned = db.session.query(Question).join(Assignment, Assignment.question_id == Question.id).join(Membership, Membership.group_id == Assignment.group_id).filter(
         Membership.student_id == current_user.id, Question.exam == user_exam(), Question.subject == 'math'
-    ).distinct().all()
+    ).all()
     return render_template('home.html', count=len(attempts), correct=completed, accuracy=round(100 * completed / len(attempts)) if attempts else 0, assigned=assigned)
 
 
