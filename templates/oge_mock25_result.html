@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block title %}Результат пробного ОГЭ{% endblock %}{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='oge_mock25.css')}}">
+<div class="mock-panel"><div class="mock-kicker">УМНО / РЕЗУЛЬТАТ №{{run.id}}</div><h1>Пробный ОГЭ завершён</h1><h2>{{run.first_score}} из 19</h2><p>Это результат <strong>только первой части</strong>. Задания 20–25 не оценены автоматически, итоговая оценка ОГЭ не рассчитана.</p><a class="btn" href="{{url_for('mock25.home')}}">Все мои пробники</a></div>
+<h2>Ответы первой части</h2>{% for q in first %}<div class="mock-task"><strong>№{{loop.index}} — {% if q and answers.get(loop.index|string)==q.correct_index|string %}верно{% else %}неверно или нет ответа{% endif %}</strong>{% if q %}<p>{{q.body}}</p><p>Правильный ответ: {{q.options[q.correct_index]}}</p><p>{{q.explanation}}</p>{% endif %}</div>{% endfor %}
+<h2>Часть 2 · сравни своё решение с образцом</h2>{% for t in second %}<div class="mock-task"><h3>№{{t[1]}} · {{t[2]}}</h3><p>{{t[3]}}</p><p><strong>Твоё решение:</strong></p><pre class="mock-solution">{{answers.get(t[1]|string,'Ответ не записан')}}</pre><details><summary>Показать образец и учебные критерии</summary><p>{{t[4]}}</p><p>{{t[5]}}</p></details></div>{% endfor %}
+{% endblock %}

@@ -136,3 +136,8 @@ def my_reviews():
     if getattr(current_user, 'role', None) != 'student': abort(403)
     reviews=AdvancedSubmission.query.filter_by(student_id=current_user.id).order_by(AdvancedSubmission.created_at.desc()).limit(100).all()
     return render_template('oge_advanced_my_reviews.html', reviews=reviews, lookup=LOOKUP)
+
+# Дополнительная подборка, импортируемая до инициализации БД.
+from oge_mega_tasks import MEGA_TASKS
+TASKS.extend(MEGA_TASKS)
+LOOKUP.update({t[0]: t for t in MEGA_TASKS})
