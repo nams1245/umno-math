@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}ЕГЭ № {{task.num}} — {{task.title}}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='ege_advanced.css') }}">
+<section class="ege-wrap"><a class="ege-back" href="{{url_for('ege_advanced.index', number=task.num)}}">← Все задания № {{task.num}}</a>
+<div class="ege-top"><span class="ege-tag">ЕГЭ · ЗАДАНИЕ № {{task.num}}</span><h1>{{task.title}}</h1><p>{{task.body}}</p></div>
+{% if task.diagram == 'triangle' %}<svg class="ege-diagram" viewBox="0 0 300 190" role="img" aria-label="Схематичный треугольник"><path d="M35 155L265 155L95 28Z" fill="none" stroke="#24b8a6" stroke-width="3"/><path d="M95 155L95 143L107 143" fill="none" stroke="#24b8a6" stroke-width="2"/><text x="24" y="172" fill="currentColor">A</text><text x="266" y="172" fill="currentColor">B</text><text x="92" y="23" fill="currentColor">C</text></svg>{% elif task.diagram == 'circle' %}<svg class="ege-diagram" viewBox="0 0 300 190" role="img" aria-label="Схема касательной к окружности"><circle cx="180" cy="95" r="64" fill="none" stroke="#24b8a6" stroke-width="3"/><path d="M55 20L145 44M55 20L244 95" stroke="#e7a453" stroke-width="2" fill="none"/><text x="45" y="17" fill="currentColor">P</text></svg>{% elif task.diagram == 'parallelogram' %}<svg class="ege-diagram" viewBox="0 0 300 180" role="img" aria-label="Схема параллелограмма"><path d="M35 140L235 140L270 35L70 35Z" fill="none" stroke="#24b8a6" stroke-width="3"/><path d="M70 35L70 140" stroke="#e7a453" stroke-dasharray="6 5" stroke-width="2"/></svg>{% endif %}
+{% if task.diagram %}<p class="ege-note">Чертёж схематический, размеры могут не соответствовать условию.</p>{% endif %}
+<form class="ege-form" method="post"><input type="hidden" name="csrf" value="{{csrf}}"><label for="answer">{% if task.answer is not none %}Числовой ответ{% else %}Ваше развёрнутое решение{% endif %}</label>
+{% if task.answer is not none %}<input id="answer" name="answer" value="{{entered}}" required placeholder="Например, 2,5" autocomplete="off">{% else %}<textarea id="answer" name="answer" rows="8" required placeholder="Запишите решение, обоснуйте каждый шаг…">{{entered}}</textarea>{% endif %}
+<button type="submit" name="action" value="{{'check' if task.answer is not none else 'reveal'}}">{{'Проверить ответ' if task.answer is not none else 'Показать образец решения'}}</button></form>
+{% if evaluated is not none %}<div class="ege-result {{'ok' if evaluated else 'bad'}}">{{'Верно! Отличная работа.' if evaluated else 'Ответ не совпал. Сравните решение с образцом ниже.'}}</div>{% endif %}
+{% if reveal %}<section class="ege-solution"><h2>Образец решения</h2><p>{{task.solution}}</p>{% if task.answer is not none %}<p><b>Правильный ответ: {{task.answer}}</b></p>{% else %}<p class="ege-note">Это самопроверка по образцу, оценка в баллах автоматически не выставляется.</p>{% endif %}</section>{% endif %}
+</section>{% endblock %}
