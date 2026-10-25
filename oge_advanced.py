@@ -62,7 +62,77 @@ def task(key):
             if action=='check': reveal=True
             elif not current_user.is_authenticated: flash('Черновик в гостевом режиме не сохраняется. Для сохранения войди в аккаунт.', 'info')
             else: flash('Черновик сохранён.', 'success')
-    return render_template('oge_advanced_task.html', entry=entry, solution=solution, reveal=reveal)
+    return render_template('oge_advanced_task.html', entry=entry, solution=solution, reveal=reveal, teachers=(User.query.filter(User.id.in_(_student_teacher_ids(current_user.id))).all() if current_user.is_authenticated and getattr(current_user,'role',None)=='student' else []))
 
 def register_advanced(app):
     app.register_blueprint(advanced_bp)
+
+# Дополнительная подборка и проверка учителем
+from oge_more_tasks import MORE_TASKS
+from flask_login import login_required
+from app import Group, Membership, User
+
+TASKS.extend(MORE_TASKS)
+LOOKUP.update({t[0]: t for t in MORE_TASKS})
+
+class AdvancedSubmission(db.Model):
+    __tablename__ = 'advanced_submission'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    task_key = db.Column(db.String(30), nullable=False)
+    solution = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(15), nullable=False, default='pending')
+    score = db.Column(db.Integer, nullable=True)
+    feedback = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+def _student_teacher_ids(student_id):
+    return [i[0] for i in db.session.query(Group.teacher_id).join(Membership, Membership.group_id == Group.id).filter(Membership.student_id == student_id).distinct().all()]
+
+@advanced_bp.route('/oge/advanced/<key>/send', methods=['POST'])
+@login_required
+def submit_to_teacher(key):
+    if getattr(current_user, 'role', None) != 'student': abort(403)
+    if key not in LOOKUP: abort(404)
+    try: teacher_id = int(request.form.get('teacher_id', ''))
+    except ValueError: abort(400)
+    if teacher_id not in _student_teacher_ids(current_user.id): abort(403)
+    body = request.form.get('solution', '').strip()
+    if not 20 <= len(body) <= 6000:
+        flash('Для отправки учителю запиши решение длиной от 20 до 6000 символов.', 'error')
+        return redirect(url_for('advanced_oge.task', key=key))
+    db.session.add(AdvancedSubmission(student_id=current_user.id, teacher_id=teacher_id, task_key=key, solution=body))
+    db.session.commit()
+    flash('Работа отправлена учителю. Проверь её статус позже.', 'success')
+    return redirect(url_for('advanced_oge.task', key=key))
+
+@advanced_bp.get('/oge/advanced/reviews')
+@login_required
+def teacher_reviews():
+    if getattr(current_user, 'role', None) != 'teacher': abort(403)
+    reviews = AdvancedSubmission.query.filter_by(teacher_id=current_user.id).order_by(AdvancedSubmission.created_at.desc()).limit(150).all()
+    names = {u.id: u.name for u in User.query.filter(User.id.in_([r.student_id for r in reviews])).all()} if reviews else {}
+    return render_template('oge_advanced_reviews.html', reviews=reviews, names=names, lookup=LOOKUP)
+
+@advanced_bp.post('/oge/advanced/reviews/<int:submission_id>')
+@login_required
+def score_review(submission_id):
+    if getattr(current_user, 'role', None) != 'teacher': abort(403)
+    review=AdvancedSubmission.query.filter_by(id=submission_id, teacher_id=current_user.id).first_or_404()
+    if review.student_id not in [i[0] for i in db.session.query(Membership.student_id).join(Group, Membership.group_id == Group.id).filter(Group.teacher_id == current_user.id).all()]: abort(403)
+    try: score=int(request.form.get('score', ''))
+    except ValueError: abort(400)
+    if score not in (0,1,2): abort(400)
+    feedback=request.form.get('feedback', '').strip()[:2000]
+    review.score=score; review.feedback=feedback; review.status='reviewed'
+    db.session.commit()
+    flash('Оценка сохранена.', 'success')
+    return redirect(url_for('advanced_oge.teacher_reviews'))
+
+@advanced_bp.get('/oge/advanced/my-reviews')
+@login_required
+def my_reviews():
+    if getattr(current_user, 'role', None) != 'student': abort(403)
+    reviews=AdvancedSubmission.query.filter_by(student_id=current_user.id).order_by(AdvancedSubmission.created_at.desc()).limit(100).all()
+    return render_template('oge_advanced_my_reviews.html', reviews=reviews, lookup=LOOKUP)
