@@ -130,7 +130,14 @@ def result(run_id):
     qs={q.id:q for q in Question.query.filter(Question.id.in_(run.question_ids)).all()}
     first = [qs.get(i) for i in run.question_ids]
     second = [LOOKUP.get(k) for k in run.advanced_keys]
-    return render_template('oge_mock25_result.html',run=run,first=first,second=second,answers=run.answers or {})
+    breakdown = []
+    for index, q in enumerate(first, 1):
+        if q is None:
+            continue
+        breakdown.append({'position': index, 'topic': number_of(q),
+            'correct': (run.answers or {}).get(str(index)) == str(q.correct_index),
+            'answered': str(index) in (run.answers or {})})
+    return render_template('oge_mock25_result.html',run=run,first=first,second=second,answers=run.answers or {},breakdown=breakdown)
 
 
 def register_mock25(app):

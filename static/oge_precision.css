@@ -1,0 +1,1 @@
+.mock-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}.mock-breakdown-item{border:1px solid #88a5aa66;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px}.mock-breakdown-item strong{color:#16796e}

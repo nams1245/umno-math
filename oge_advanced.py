@@ -151,3 +151,8 @@ LOOKUP.update({t[0]: t for t in CHALLENGE_TASKS})
 from oge_extra_tasks import EXTRA_TASKS
 TASKS.extend(EXTRA_TASKS)
 LOOKUP.update({t[0]: t for t in EXTRA_TASKS})
+
+# New 36 tasks, no migration.
+from oge_precision_tasks import PRECISION_TASKS
+TASKS.extend(PRECISION_TASKS)
+LOOKUP.update({t[0]: t for t in PRECISION_TASKS})
