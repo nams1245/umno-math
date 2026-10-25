@@ -53,12 +53,18 @@ def start():
     if len(pool) < 19:
         flash('В банке пока недостаточно тестовых заданий для пробника.', 'error')
         return redirect(url_for('mock25.home'))
-    picked = random.sample(pool,19)
+    variant = request.form.get("variant", "random")
+    if variant not in ("random", "1", "2", "3"):
+        abort(400)
+    rng = random.SystemRandom() if variant == "random" else random.Random(20261025 + int(variant) * 7919)
+    pool = sorted(pool, key=lambda q: q.id)
+    picked = rng.sample(pool, 19)
     keys = []
     for n in range(20,26):
         options = [t[0] for t in LOOKUP.values() if t[1] == n]
         if not options: abort(503)
-        keys.append(random.choice(options))
+        options.sort()
+        keys.append(rng.choice(options))
     run=OgePracticeRun(user_id=current_user.id, question_ids=[q.id for q in picked], advanced_keys=keys, answers={})
     db.session.add(run); db.session.commit()
     return redirect(url_for('mock25.take',run_id=run.id))

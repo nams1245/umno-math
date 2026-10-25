@@ -141,3 +141,8 @@ def my_reviews():
 from oge_mega_tasks import MEGA_TASKS
 TASKS.extend(MEGA_TASKS)
 LOOKUP.update({t[0]: t for t in MEGA_TASKS})
+
+# Further curated tasks; no database migration required.
+from oge_challenge_tasks import CHALLENGE_TASKS
+TASKS.extend(CHALLENGE_TASKS)
+LOOKUP.update({t[0]: t for t in CHALLENGE_TASKS})
