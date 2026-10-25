@@ -31,3 +31,16 @@ html{scroll-behavior:smooth}body{overflow-x:hidden}.mobile-nav-wrap{display:none
 @media(max-width:850px){.shell{display:block}.sidebar{position:sticky;top:0;z-index:30;display:flex;flex-direction:row;align-items:center;justify-content:space-between;padding:12px 18px;gap:10px;box-shadow:0 5px 15px #06282a21}.sidebar>.nav,.sidebar>.navlabel,.sidebar>.sidebottom{display:none}.mobile-nav-wrap{display:block}.mobile-nav{position:relative}.mobile-nav summary{cursor:pointer;list-style:none;color:#e9fbf6;border:1px solid #315467;border-radius:11px;padding:10px 13px;font-weight:750}.mobile-nav summary::-webkit-details-marker{display:none}.mobile-links{position:absolute;right:0;top:calc(100% + 12px);width:min(83vw,330px);max-height:calc(100vh - 90px);overflow-y:auto;background:#102e43;border:1px solid #2b5a63;box-shadow:0 20px 45px #0a263854;border-radius:17px;display:grid;padding:12px;gap:3px}.mobile-links a{display:block;padding:12px;border-radius:10px;color:#e3f3f0;font-weight:650}.mobile-links a:hover{background:#245365;text-decoration:none}.main{padding:25px 18px}.topbar{margin-bottom:25px}.topbar .tiny{display:none}.account{margin-left:auto}.pagehead{align-items:flex-start}.brand{font-size:24px}.three{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.main{padding:20px 15px}.pagehead{flex-wrap:wrap}.pagehead h1{font-size:29px}.topbar{justify-content:flex-end}.topbar .account{gap:9px}.topbar .userpill{font-size:11px;padding:7px 9px}.stats-grid,.three,.two,.quick-grid,.insight-row,.topic-progress{grid-template-columns:1fr}.stats-grid{gap:10px}.stats-grid .metric-tile{min-height:0}.stats-grid .metric-tile strong{font-size:30px}.insight-row{gap:10px}.insight-action{padding:15px}.history{gap:10px;align-items:flex-start}.history .chip{white-space:nowrap}.hero{min-height:auto;padding:27px 22px}.hero h1,.hero h2{font-size:clamp(28px,9vw,38px)}.card{padding:18px}.btn{min-height:44px}.numbers{gap:7px}.number{min-width:42px;min-height:44px}.itemrow .btn{width:100%}.questioncard{max-width:100%}.feature-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.insight-action,.quick-grid a{transition:none}}
+
+/* Регистрация: цвет текста не наследуется от общего стиля ссылок. */
+.topbar .account a.register-cta, .topbar .account a.register-cta:visited {
+  background:#0d615b; color:#fff !important; border:1px solid #0d615b;
+  font-size:14px; font-weight:800; letter-spacing:.01em; border-radius:13px;
+  padding:12px 18px; min-height:44px; white-space:nowrap;
+  box-shadow:0 6px 18px rgba(9,86,76,.18); opacity:1;
+}
+.topbar .account a.register-cta:hover, .topbar .account a.register-cta:focus-visible {
+  background:#084a46; color:#fff !important; border-color:#084a46; text-decoration:none;
+}
+.topbar .account a.register-cta:focus-visible {outline:3px solid #68ddbf; outline-offset:3px}
+@media(max-width:650px){.topbar .account a.register-cta{font-size:13px;padding:11px 13px}}
