@@ -156,3 +156,8 @@ LOOKUP.update({t[0]: t for t in EXTRA_TASKS})
 from oge_precision_tasks import PRECISION_TASKS
 TASKS.extend(PRECISION_TASKS)
 LOOKUP.update({t[0]: t for t in PRECISION_TASKS})
+
+# 50 original advanced exercises; separate module, no new tables.
+from oge_superhard_tasks import SUPERHARD_TASKS
+TASKS.extend(SUPERHARD_TASKS)
+LOOKUP.update({t[0]: t for t in SUPERHARD_TASKS})
