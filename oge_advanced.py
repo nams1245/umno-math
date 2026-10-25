@@ -161,3 +161,8 @@ LOOKUP.update({t[0]: t for t in PRECISION_TASKS})
 from oge_superhard_tasks import SUPERHARD_TASKS
 TASKS.extend(SUPERHARD_TASKS)
 LOOKUP.update({t[0]: t for t in SUPERHARD_TASKS})
+
+# Final OGE extension: +120 challenge problems (20 each, №20–25).
+from oge_final_tasks import FINAL_TASKS
+TASKS.extend(FINAL_TASKS)
+LOOKUP.update({t[0]: t for t in FINAL_TASKS})
