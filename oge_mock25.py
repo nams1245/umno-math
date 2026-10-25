@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import random
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from app import db, Question
+from app import db, Question, number_of
 from oge_advanced import LOOKUP
 
 mock25_bp = Blueprint('mock25', __name__, url_prefix='/oge/mock25')
@@ -58,7 +58,18 @@ def start():
         abort(400)
     rng = random.SystemRandom() if variant == "random" else random.Random(20261025 + int(variant) * 7919)
     pool = sorted(pool, key=lambda q: q.id)
-    picked = rng.sample(pool, 19)
+    # Приоритет: по одному заданию на каждый номер 1–19, когда банк позволяет.
+    by_number = {n: [] for n in range(1,20)}
+    for question in pool:
+        number = number_of(question)
+        if number in by_number:
+            by_number[number].append(question)
+    if all(by_number.values()):
+        picked = [rng.choice(by_number[n]) for n in range(1,20)]
+    else:
+        # Если какого-то номера нет, выдаём обычную учебную подборку,
+        # не выдавая её за официальный вариант.
+        picked = rng.sample(pool, 19)
     keys = []
     for n in range(20,26):
         options = [t[0] for t in LOOKUP.values() if t[1] == n]
