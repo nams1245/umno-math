@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block title %}Сложные задания ОГЭ{% endblock %}{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='oge_advanced.css')}}">
+<div class="adv-hero"><span>ОГЭ · ВТОРАЯ ЧАСТЬ</span><h1>Сложные задачи с доказательствами</h1><p>12 авторских заданий по номерам 20–25. Решай самостоятельно, сохраняй черновики и проверяй обоснования по образцу.</p></div>
+<div class="adv-stats"><div><strong>12</strong><small>задач</small></div><div><strong>6</strong><small>номеров</small></div><div><strong>2</strong><small>балла за задание</small></div></div>
+{% for number in range(20,26) %}<section class="adv-section"><h2>№ {{number}} <small>{% if number==20 %}Алгебра{% elif number==21 %}Текстовые задачи{% elif number==22 %}Графики{% elif number==23 %}Геометрические вычисления{% elif number==24 %}Доказательства{% else %}Сложная геометрия{% endif %}</small></h2><div class="adv-grid">{% for t in tasks if t[1] == number %}<a class="adv-card" href="{{url_for('advanced_oge.task',key=t[0])}}"><span class="adv-tag">{{t[7]}}</span><h3>{{t[2]}}</h3><p>{{t[3]}}</p><span class="adv-link">Решить задачу →</span></a>{% endfor %}</div></section>{% endfor %}
+<p class="adv-note">Это авторские учебные задачи по темам второй части. Самопроверка не заменяет оценку эксперта ОГЭ.</p>{% endblock %}
