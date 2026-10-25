@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Решение задачи{% endblock %}{% block content %}
+<a class="back" href="{{url_for('cms.catalog',exam=task.exam)}}">← Все задания {{task.exam|upper}}</a><article class="card questioncard"><span class="chip">{{task.exam|upper}} · № {{task.number}}</span><h1>{{task.topic}}</h1><div class="cms-prose">{{task.statement}}</div>
+{% if task.image_data %}<img class="cms-picture" src="{{url_for('cms.picture',task_id=task.id)}}" alt="Чертёж к заданию">{% endif %}
+<details class="cms-answer"><summary>Показать ответ и решение</summary><h3>Ответ</h3><div class="cms-prose">{{task.answer or 'Ответ не указан'}}</div><h3>Разбор</h3><div class="cms-prose">{{task.solution or 'Разбор будет добавлен позднее'}}</div></details>
+{% if cms_owner %}<p><a class="btn" href="{{url_for('cms.edit',task_id=task.id)}}">✎ Изменить задание</a></p>{% endif %}</article>
+{% endblock %}

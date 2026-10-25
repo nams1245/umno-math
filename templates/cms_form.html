@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Редактор задания{% endblock %}{% block content %}
+<a class="back" href="{{url_for('cms.dashboard')}}">← Все задания</a><div class="pagehead"><div><h1>{{'Редактирование задания' if task else 'Новое задание'}}</h1><p class="muted">Заполни поля, приложи чертёж и реши, когда показывать задачу всем.</p></div></div>
+<form class="card cms-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="{{csrf}}"><div class="cms-two"><label>Экзамен<select name="exam"><option value="oge" {% if task and task.exam=='oge' %}selected{% endif %}>ОГЭ</option><option value="ege" {% if task and task.exam=='ege' %}selected{% endif %}>ЕГЭ (профиль)</option></select></label><label>Номер задания<input name="number" type="number" min="1" max="25" required value="{{task.number if task else 20}}"></label></div>
+<label>Тема<input name="topic" maxlength="130" required placeholder="Например: Геометрия — окружность" value="{{task.topic if task else ''}}"></label>
+<label>Условие задачи<textarea name="statement" rows="7" maxlength="15000" required placeholder="Напиши условие, обозначения, числа...">{{task.statement if task else ''}}</textarea></label>
+<label>Ответ (для задач с доказательством можно написать: доказательство)<textarea name="answer" rows="2" maxlength="1500" placeholder="Например: 12">{{task.answer if task else ''}}</textarea></label>
+<label>Подробное решение<textarea name="solution" rows="10" maxlength="30000" placeholder="Шаг 1. ...">{{task.solution if task else ''}}</textarea></label>
+<label>Рисунок / чертёж (PNG, JPG, WebP, до 2 МБ)<input type="file" name="picture" accept="image/png,image/jpeg,image/webp"></label>
+{% if task and task.image_data %}<img class="cms-picture" src="{{url_for('cms.picture',task_id=task.id)}}" alt="Существующий рисунок"><label class="cms-check"><input type="checkbox" name="remove_picture" value="yes">Удалить прежний рисунок</label>{% endif %}
+<label class="cms-check"><input type="checkbox" name="published" value="yes" {% if task and task.published %}checked{% endif %}>Опубликовать задание для всех сразу после сохранения</label>
+<div class="cms-actions"><button class="btn" type="submit">💾 Сохранить задание</button><a href="{{url_for('cms.dashboard')}}">Отмена</a></div><p class="muted">Не загружай персональные данные учеников на изображения. Используй только свои рисунки или разрешённые к публикации материалы.</p></form>
+{% endblock %}

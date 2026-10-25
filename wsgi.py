@@ -9,4 +9,6 @@ register_advanced(app)
 register_mock25(app)
 register_ege(app)
 register_ege_mock(app)
+from admin_editor import register_cms
+register_cms(app)
 init_database()

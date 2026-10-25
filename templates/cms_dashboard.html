@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Админ-панель{% endblock %}{% block content %}
+<div class="pagehead"><div><h1>⚙ Управление заданиями</h1><p class="muted">Создавай, редактируй и публикуй задания без GitHub. Все изменения сохраняются в Neon.</p></div><a class="btn" href="{{url_for('cms.create')}}">+ Добавить задачу</a></div>
+<div class="card"><table class="cms-table"><thead><tr><th>Экзамен</th><th>№</th><th>Тема и условие</th><th>Статус</th><th>Действия</th></tr></thead><tbody>
+{% for t in rows %}<tr><td>{{t.exam|upper}}</td><td>{{t.number}}</td><td><strong>{{t.topic}}</strong><p class="muted">{{t.statement[:100]}}{% if t.statement|length > 100 %}…{% endif %}</p></td><td>{{'✅ Опубликовано' if t.published else '📝 Черновик'}}</td><td><a href="{{url_for('cms.edit',task_id=t.id)}}">Редактировать</a> · <a href="{{url_for('cms.detail',task_id=t.id)}}">Просмотр</a><form method="post" action="{{url_for('cms.toggle',task_id=t.id)}}" style="margin-top:9px"><input type="hidden" name="csrf" value="{{csrf}}"><button class="btn btnsmall" type="submit">{{'Снять с публикации' if t.published else 'Опубликовать'}}</button></form></td></tr>{% else %}<tr><td colspan="5">Заданий ещё нет. Нажми «Добавить задачу».</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

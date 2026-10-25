@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Задания автора{% endblock %}{% block content %}
+<div class="pagehead"><div><h1>Задания автора</h1><p class="muted">Новые задания ОГЭ и профильного ЕГЭ, опубликованные на сайте.</p></div>{% if cms_owner %}<a class="btn" href="{{url_for('cms.dashboard')}}">⚙ Админ-панель</a>{% endif %}</div>
+<div class="exam-switch"><a class="btn {% if exam!='oge' %}cms-outline{% endif %}" href="{{url_for('cms.catalog',exam='oge')}}">ОГЭ</a><a class="btn {% if exam!='ege' %}cms-outline{% endif %}" href="{{url_for('cms.catalog',exam='ege')}}">Профильный ЕГЭ</a></div>
+<div class="cards two">{% for t in rows %}<a class="card subject" href="{{url_for('cms.detail',task_id=t.id)}}"><span class="chip">№ {{t.number}} · {{t.exam|upper}}</span><h3>{{t.topic}}</h3><p>{{t.statement[:200]}}{% if t.statement|length>200 %}…{% endif %}</p><span class="more">Решить →</span></a>{% else %}<div class="card"><h3>Пока нет опубликованных заданий</h3><p>Администратор добавит их в этом разделе.</p></div>{% endfor %}</div>
+{% endblock %}
