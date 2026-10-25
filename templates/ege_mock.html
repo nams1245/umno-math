@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Пробный профильный ЕГЭ{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='ege_advanced.css')}}">
+<link rel="stylesheet" href="{{url_for('static',filename='ege_mock.css')}}">
+<section class="ege-wrap"><div class="ege-top"><span class="ege-tag">ТРЕНИРОВОЧНЫЙ ПРОФИЛЬНЫЙ ЕГЭ</span><h1>Пробный вариант № {{variant}}</h1>
+<p>19 заданий: № 1–12 проверяются автоматически, № 13–19 — по образцу. Учебный вариант не является официальным КИМ. Черновики пробника не сохраняются.</p></div>
+<nav class="ege-filter">{% for i in (1,2,3) %}<a href="{{url_for('ege_mock.home',variant=i)}}" class="{{'active' if variant==i else ''}}">Вариант {{i}}</a>{% endfor %}<a href="{{url_for('ege_advanced.index')}}">Банк задач</a></nav>
+{% if results is none %}
+<div class="exam-toolbar"><div><b>Время подготовки</b><span>235 минут</span></div><div id="timer" role="timer" aria-live="off">03:55:00</div><button type="button" id="timer-start" class="timer-btn">Запустить таймер</button></div>
+<form method="post" id="exam-form"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="variant" value="{{variant}}">
+{% for t in tasks %}<article class="exam-task"><div class="exam-number">Задание № {{t.num}} <span>{{'Первая часть' if t.num<=12 else 'Вторая часть'}}</span></div><h2>{{t.title}}</h2><p>{{t.body}}</p>
+<label for="ans{{t.num}}">{{'Числовой ответ' if t.num<=12 else 'Развёрнутое решение'}}</label>
+{% if t.num<=12 %}<input id="ans{{t.num}}" name="answer_{{t.num}}" placeholder="Ответ" autocomplete="off">{% else %}<textarea id="ans{{t.num}}" name="answer_{{t.num}}" rows="5" placeholder="Запиши обоснования и вычисления..."></textarea>{% endif %}
+</article>{% endfor %}<button class="finish-btn" type="submit">Завершить и проверить первую часть</button></form>
+<script src="{{url_for('static',filename='ege_mock.js')}}" defer></script>
+{% else %}
+{% set ns=namespace(ok=0) %}{% for r in results[:12] %}{% if r.correct %}{% set ns.ok=ns.ok+1 %}{% endif %}{% endfor %}
+<div class="exam-score"><h2>Первая часть: {{ns.ok}} из 12</h2><p>Вторая часть не оценена автоматически. Ниже доступны образцы решений для самопроверки.</p></div>
+{% for r in results %}<article class="exam-task"><div class="exam-number">№ {{r.task.num}} · {% if r.correct is sameas true %}Верно{% elif r.correct is sameas false %}Ошибка или пропуск{% else %}Самопроверка{% endif %}</div><h3>{{r.task.title}}</h3><p>{{r.task.body}}</p><p><b>Твой ответ:</b> {{r.given or 'Не заполнено'}}</p>{% if r.task.answer is not none %}<p><b>Ответ:</b> {{r.task.answer}}</p>{% endif %}<details><summary>Показать решение</summary><p>{{r.task.solution}}</p></details></article>{% endfor %}
+<a class="finish-btn" href="{{url_for('ege_mock.home',variant=variant)}}">Начать вариант заново</a>
+{% endif %}</section>
+{% endblock %}

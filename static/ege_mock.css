@@ -1,0 +1,8 @@
+
+.exam-toolbar,.exam-task,.exam-score{border:1px solid rgba(139,180,187,.28);border-radius:18px;padding:20px;margin:20px 0;background:rgba(65,107,127,.09)}
+.exam-toolbar{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.exam-toolbar span{display:block;opacity:.7}.exam-toolbar #timer{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums}
+.exam-number{font-weight:800;color:#46d6bc;display:flex;justify-content:space-between;gap:8px}.exam-number span{font-weight:400;font-size:.9rem}
+.exam-task h2{font-size:1.3rem;margin:12px 0}.exam-task label{display:block;margin:16px 0 6px}.exam-task input,.exam-task textarea{display:block;width:100%;padding:14px;border-radius:10px;box-sizing:border-box;background:#122d42;color:#fff;border:1px solid #527784}
+.timer-btn,.finish-btn{display:inline-block;background:#087b6b;color:#fff!important;border:0;padding:14px 18px;border-radius:11px;font-weight:800;cursor:pointer;text-decoration:none}
+.exam-score h2{margin-top:0}.exam-task details{padding:12px 0}.exam-task details summary{cursor:pointer;font-weight:700}

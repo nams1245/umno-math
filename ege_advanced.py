@@ -73,6 +73,8 @@ advanced = [
 ]
 for i,(n,title,body,solution,diagram) in enumerate(advanced,1):
     add(f'{n}-{i:02}',n,title,body,None,solution,'повышенный',diagram)
+from ege_plus import TASKS as EXTRA_EGE_TASKS
+TASKS.extend(EXTRA_EGE_TASKS)
 LOOKUP={t['key']:t for t in TASKS}
 assert len(LOOKUP)==len(TASKS)
 
