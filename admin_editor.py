@@ -7,7 +7,7 @@ from functools import wraps
 from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, url_for, flash, abort, render_template, Response
 from flask_login import current_user, login_required
-from app import db
+from app import db, Question, Attempt, Favorite, Assignment, number_of
 
 admin = Blueprint('cms', __name__)
 
@@ -23,6 +23,22 @@ class ManagedTask(db.Model):
     image_data = db.Column(db.LargeBinary, nullable=True)
     image_type = db.Column(db.String(20), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+
+class LegacyArchive(db.Model):
+    __tablename__ = 'legacy_archive'
+    id = db.Column(db.Integer, primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False, unique=True, index=True)
+    archived_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+
+def archived_ids():
+    return {row[0] for row in db.session.query(LegacyArchive.question_id).all()}
+
+
+def active_questions(questions):
+    hidden = archived_ids()
+    return [q for q in questions if q.id not in hidden]
 
 
 def is_owner():
@@ -45,8 +61,16 @@ def owner_context():
 @admin.get('/admin/tasks')
 @owner_only
 def dashboard():
-    rows = ManagedTask.query.order_by(ManagedTask.created_at.desc(), ManagedTask.id.desc()).all()
-    return render_template('cms_dashboard.html', rows=rows)
+    exam = request.args.get('exam', '')
+    status = request.args.get('status', '')
+    term = request.args.get('q', '').strip()[:100].casefold()
+    qs = ManagedTask.query
+    if exam in ('oge','ege'): qs = qs.filter_by(exam=exam)
+    if status == 'published': qs = qs.filter_by(published=True)
+    if status == 'draft': qs = qs.filter_by(published=False)
+    rows = qs.order_by(ManagedTask.id.desc()).all()
+    if term: rows = [t for t in rows if term in (t.statement+' '+t.topic+' '+str(t.number)).casefold()]
+    return render_template('cms_dashboard.html', rows=rows, exam=exam, status=status, q=term)
 
 @admin.route('/admin/tasks/new',methods=['GET','POST'])
 @owner_only
@@ -136,3 +160,92 @@ def picture(task_id):
 def register_cms(app):
     app.config['MAX_CONTENT_LENGTH']=3*1024*1024
     app.register_blueprint(admin)
+
+
+@admin.post('/admin/tasks/<int:task_id>/delete')
+@owner_only
+def delete_managed(task_id):
+    task = db.get_or_404(ManagedTask, task_id)
+    if request.form.get('confirm') != 'DELETE': abort(400)
+    db.session.delete(task)
+    db.session.commit()
+    flash('Авторское задание удалено.','success')
+    return redirect(url_for('cms.dashboard'))
+
+
+@admin.post('/admin/tasks/bulk')
+@owner_only
+def bulk_managed():
+    action=request.form.get('action')
+    if action not in ('publish','draft','delete'): abort(400)
+    raw=request.form.getlist('ids')[:200]
+    ids=[]
+    for item in raw:
+        try: ids.append(int(item))
+        except (ValueError,TypeError): continue
+    items=ManagedTask.query.filter(ManagedTask.id.in_(ids)).all() if ids else []
+    if action=='delete' and request.form.get('confirm')!='DELETE': abort(400)
+    for task in items:
+        if action=='delete': db.session.delete(task)
+        else: task.published=(action=='publish')
+    db.session.commit()
+    flash(f'Обработано заданий: {len(items)}.','success')
+    return redirect(url_for('cms.dashboard'))
+
+
+@admin.get('/admin/legacy')
+@owner_only
+def legacy_list():
+    exam=request.args.get('exam','oge')
+    if exam not in ('oge','ege'): exam='oge'
+    term=request.args.get('q','').strip()[:100].casefold()
+    show_archived=request.args.get('status')=='archived'
+    hidden=archived_ids()
+    rows=Question.query.filter_by(exam=exam,subject='math').order_by(Question.id.desc()).all()
+    rows=[q for q in rows if (q.id in hidden)==show_archived and (not term or term in (q.body+' '+q.topic+' '+str(q.id)).casefold())]
+    return render_template('cms_legacy.html',rows=rows,exam=exam,status='archived' if show_archived else 'active',q=term,number_of=number_of)
+
+
+@admin.post('/admin/legacy/<int:qid>/archive')
+@owner_only
+def archive_legacy(qid):
+    task=db.get_or_404(Question,qid)
+    if task.subject!='math': abort(404)
+    if request.form.get('confirm')!='ARCHIVE':abort(400)
+    if not LegacyArchive.query.filter_by(question_id=qid).first():
+        db.session.add(LegacyArchive(question_id=qid))
+        db.session.commit()
+    flash('Задание скрыто из каталога. История решений сохранена.','success')
+    return redirect(url_for('cms.legacy_list',exam=task.exam))
+
+
+@admin.post('/admin/legacy/<int:qid>/restore')
+@owner_only
+def restore_legacy(qid):
+    task=db.get_or_404(Question,qid)
+    row=LegacyArchive.query.filter_by(question_id=qid).first()
+    if row:
+        db.session.delete(row)
+        db.session.commit()
+    flash('Задание восстановлено.','success')
+    return redirect(url_for('cms.legacy_list',exam=task.exam,status='archived'))
+
+
+@admin.route('/admin/legacy/<int:qid>/edit',methods=['GET','POST'])
+@owner_only
+def edit_legacy(qid):
+    task=db.get_or_404(Question,qid)
+    if task.subject!='math':abort(404)
+    if request.method=='POST':
+        # Preserve the body: legacy numbering and manual-answer tables use it as key.
+        task.explanation=request.form.get('explanation','').strip()[:20000]
+        task.theory=request.form.get('theory','').strip()[:20000]
+        if task.options:
+            try: correct=int(request.form.get('correct_index','-1'))
+            except ValueError: correct=-1
+            if correct < 0 or correct >= len(task.options): abort(400)
+            task.correct_index=correct
+        db.session.commit()
+        flash('Разбор и ответ обновлены.','success')
+        return redirect(url_for('cms.legacy_list',exam=task.exam))
+    return render_template('cms_legacy_edit.html',task=task,number=number_of(task))

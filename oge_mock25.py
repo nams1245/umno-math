@@ -47,7 +47,8 @@ def home():
 def start():
     if getattr(current_user, 'role', None) != 'student': abort(403)
     # This practice format chooses ONLY questions with genuine options and valid correct_index.
-    pool = [q for q in Question.query.filter_by(subject='math', exam='oge').all()
+    from admin_editor import active_questions
+    pool = [q for q in active_questions(Question.query.filter_by(subject='math', exam='oge').all())
             if isinstance(q.options, list) and len(q.options) >= 2 and
             isinstance(q.correct_index, int) and 0 <= q.correct_index < len(q.options)]
     if len(pool) < 19:

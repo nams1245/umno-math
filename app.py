@@ -191,6 +191,16 @@ def catalog_helpers():
     return {'number_of': number_of, 'catalog': CATALOG, 'user_exam': user_exam}
 
 
+def visible_questions(rows):
+    from admin_editor import active_questions
+    return active_questions(rows)
+
+
+def is_archived(qid):
+    from admin_editor import LegacyArchive
+    return db.session.query(LegacyArchive.id).filter_by(question_id=qid).first() is not None
+
+
 @app.route('/')
 def home():
     if not current_user.is_authenticated:
@@ -202,6 +212,7 @@ def home():
     assigned = db.session.query(Question).join(Assignment, Assignment.question_id == Question.id).join(Membership, Membership.group_id == Assignment.group_id).filter(
         Membership.student_id == current_user.id, Question.exam == user_exam(), Question.subject == 'math'
     ).all()
+    assigned = visible_questions(assigned)
     return render_template('home.html', count=len(attempts), correct=completed, accuracy=round(100 * completed / len(attempts)) if attempts else 0, assigned=assigned)
 
 
@@ -262,7 +273,7 @@ def subject_page(subject):
     if subject != 'math':
         abort(404)
     exam_type = chosen_exam()
-    questions = Question.query.filter_by(subject=subject, exam=exam_type).order_by(Question.id).all()
+    questions = visible_questions(Question.query.filter_by(subject=subject, exam=exam_type).order_by(Question.id).all())
     selected = request.args.get('number', type=int)
     if selected and selected not in dict(CATALOG[exam_type]):
         abort(404)
@@ -279,7 +290,7 @@ def subject_page(subject):
 def constructor():
     """Author-built practice sets. No registration is required."""
     exam_type = chosen_exam()
-    available = Question.query.filter_by(subject='math', exam=exam_type).order_by(Question.id).all()
+    available = visible_questions(Question.query.filter_by(subject='math', exam=exam_type).order_by(Question.id).all())
     by_number = {}
     for q in available:
         num = number_of(q)
@@ -321,7 +332,7 @@ def custom_variant():
     ids = data.get('ids', [])
     if not ids:
         return redirect(url_for('constructor'))
-    questions = Question.query.filter(Question.id.in_(ids)).all()
+    questions = visible_questions(Question.query.filter(Question.id.in_(ids)).all())
     lookup = {q.id: q for q in questions}
     ordered = [lookup[qid] for qid in ids if qid in lookup]
     results = None
@@ -353,6 +364,7 @@ def custom_variant():
 @app.route('/question/<int:qid>', methods=['GET', 'POST'])
 def question(qid):
     q = db.get_or_404(Question, qid)
+    if is_archived(q.id): abort(404)
     if q.subject != 'math':
         abort(404)
     manual = MANUAL_LOOKUP.get(q.body)
@@ -404,6 +416,7 @@ def toggle_favorite(qid):
 def favorites():
     rows = db.session.query(Question).join(Favorite, Favorite.question_id == Question.id).filter(
         Favorite.user_id == current_user.id, Question.subject == 'math').order_by(Favorite.id.desc()).all()
+    rows = visible_questions(rows)
     return render_template('favorites.html', questions=rows)
 
 
@@ -419,7 +432,7 @@ def search_questions():
     exam_type = chosen_exam()
     phrase = request.args.get('q', '').strip()[:120]
     difficulty = request.args.get('difficulty', '')
-    qs = Question.query.filter_by(subject='math', exam=exam_type).all()
+    qs = visible_questions(Question.query.filter_by(subject='math', exam=exam_type).all())
     if phrase:
         qs = [q for q in qs if phrase.casefold() in (q.body+' '+q.topic+' '+str(number_of(q))).casefold()]
     if difficulty in ('Базовый', 'Средний', 'Сложный'):
@@ -464,7 +477,7 @@ def extended_score(qid):
 @app.route('/theory')
 def theory():
     exam_type = chosen_exam()
-    questions = Question.query.filter_by(subject='math', exam=exam_type).order_by(Question.id).all()
+    questions = visible_questions(Question.query.filter_by(subject='math', exam=exam_type).order_by(Question.id).all())
     return render_template('theory.html', questions=questions, exam_type=exam_type)
 
 
@@ -525,7 +538,7 @@ def assistant():
         else:
             keyword = topic.lower()
             matching = [
-                q for q in Question.query.filter_by(subject='math', exam=user_exam()).all()
+                q for q in visible_questions(Question.query.filter_by(subject='math', exam=user_exam()).all())
                 if any(w in (q.topic + ' ' + q.body).lower() for w in keyword.split() if len(w) >= 4)
             ]
             if matching:
@@ -587,7 +600,7 @@ def teacher_group(gid):
         return redirect(url_for('teacher_group', gid=gid))
     members = db.session.query(User).join(Membership, Membership.student_id == User.id).filter(Membership.group_id == gid).all()
     assignments = db.session.query(Question).join(Assignment, Assignment.question_id == Question.id).filter(Assignment.group_id == gid).all()
-    questions = Question.query.filter_by(subject='math').all()
+    questions = visible_questions(Question.query.filter_by(subject='math').all())
     stats = {u.id: (lambda a: (len(a), sum(x.is_correct for x in a)))(Attempt.query.filter_by(user_id=u.id).all()) for u in members}
     return render_template('teacher_group.html', group=group, members=members, assignments=assignments, questions=questions, stats=stats)
 
@@ -597,7 +610,7 @@ def teacher_group(gid):
 def exam():
     exam_type = user_exam()
     if request.method == 'POST':
-        all_q = Question.query.filter_by(subject='math', exam=exam_type).all()
+        all_q = visible_questions(Question.query.filter_by(subject='math', exam=exam_type).all())
         picked = {}
         for q in all_q:
             n = number_of(q)
@@ -612,7 +625,7 @@ def exam():
         db.session.commit()
         return redirect(url_for('exam_run', run_id=run.id))
     past = MockExam.query.filter_by(user_id=current_user.id).order_by(MockExam.started_at.desc()).limit(10).all()
-    available = len({number_of(q) for q in Question.query.filter_by(subject='math', exam=exam_type).all() if number_of(q)})
+    available = len({number_of(q) for q in visible_questions(Question.query.filter_by(subject='math', exam=exam_type).all()) if number_of(q)})
     return render_template('exam.html', past=past, available=available, minutes=EXAM_MINUTES[exam_type])
 
 
