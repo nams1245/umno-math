@@ -1,0 +1,30 @@
+<section class="visual-card" aria-label="Координатная плоскость для исследования графика">
+<div class="visual-heading"><strong>Координатная плоскость</strong><span class="muted">Нажми на сетку, чтобы отметить точку</span></div>
+<svg id="oge-graph" viewBox="0 0 560 340" role="img" aria-label="График функции и координатная сетка">
+<rect x="0" y="0" width="560" height="340" fill="#fff" rx="12"/>
+<g id="oge-grid"></g><g id="oge-curve"></g><g id="oge-markers"></g>
+<rect x="44" y="16" width="470" height="286" fill="transparent" id="graph-click-area" tabindex="0" aria-label="Отметить точку на координатной плоскости"/>
+</svg>
+<div class="graph-controls"><span id="graph-mode" aria-live="polite"></span><span id="graph-point">Выбранная точка: —</span><button type="button" id="graph-clear" class="graph-action">Убрать отметку</button></div>
+<p class="muted" style="font-size:.85rem">Отметка помогает исследовать условие, но сама по себе не считается проверкой ответа. Определи свойства графика в своём решении.</p>
+</section>
+<script>
+(function(){
+ const svg=document.getElementById('oge-graph');if(!svg)return;
+ const grid=document.getElementById('oge-grid'),curve=document.getElementById('oge-curve'),markers=document.getElementById('oge-markers');
+ const left=44,top=16,width=470,height=286,xmin=-6,xmax=8,ymin=-6,ymax=8;
+ const px=x=>left+(x-xmin)/(xmax-xmin)*width,py=y=>top+(ymax-y)/(ymax-ymin)*height;
+ const ns='http://www.w3.org/2000/svg';function node(name,attrs,parent){const e=document.createElementNS(ns,name);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,String(v)));parent.appendChild(e);return e}
+ for(let x=xmin;x<=xmax;x++){node('line',{x1:px(x),y1:top,x2:px(x),y2:top+height,stroke:x===0?'#435d73':'#e4ebf2','stroke-width':x===0?1.8:1},grid);if(x%2===0)node('text',{x:px(x)+3,y:py(0)+15,fill:'#627486','font-size':10},grid).textContent=x}
+ for(let y=ymin;y<=ymax;y++){node('line',{x1:left,y1:py(y),x2:left+width,y2:py(y),stroke:y===0?'#435d73':'#e4ebf2','stroke-width':y===0?1.8:1},grid);if(y%2===0&&y!==0)node('text',{x:px(0)+6,y:py(y)-4,fill:'#627486','font-size':10},grid).textContent=y}
+ node('text',{x:left+width-10,y:py(0)-8,fill:'#334b60','font-size':13},grid).textContent='x';node('text',{x:px(0)+8,y:top+12,fill:'#334b60','font-size':13},grid).textContent='y';
+ const parabola={{ 'true' if 'x² − 6x + 5' in q.body else 'false' }};
+ const fn=parabola?(x=>x*x-6*x+5):(x=>x+2);
+ let path='';for(let x=xmin;x<=xmax;x+=.035){let y=fn(x);path+=(path?' L':'M')+px(x).toFixed(2)+' '+py(y).toFixed(2)}
+ node('path',{d:path,fill:'none',stroke:'#00a88b','stroke-width':3,'stroke-linejoin':'round'},curve);
+ if(!parabola){node('circle',{cx:px(2),cy:py(4),r:6,fill:'#fff',stroke:'#00a88b','stroke-width':3},curve);node('line',{x1:px(xmin),x2:px(xmax),y1:py(4),y2:py(4),stroke:'#b583e8','stroke-width':2,'stroke-dasharray':'7 5'},curve)}
+ document.getElementById('graph-mode').textContent=parabola?'График: y = x² − 6x + 5':'График: y = x + 2, x ≠ 2; прямая y = 4';
+ const area=document.getElementById('graph-click-area');function mark(ev){const b=svg.getBoundingClientRect(),ratio=560/b.width;let x=(ev.clientX-b.left)*ratio,y=(ev.clientY-b.top)*(340/b.height);x=Math.max(left,Math.min(left+width,x));y=Math.max(top,Math.min(top+height,y));const xx=xmin+(x-left)/width*(xmax-xmin),yy=ymax-(y-top)/height*(ymax-ymin);markers.replaceChildren();node('circle',{cx:x,cy:y,r:6,fill:'#ed5f83',stroke:'#fff','stroke-width':2},markers);document.getElementById('graph-point').textContent='Выбранная точка: ('+xx.toFixed(1)+'; '+yy.toFixed(1)+')'}
+ area.addEventListener('click',mark);document.getElementById('graph-clear').addEventListener('click',()=>{markers.replaceChildren();document.getElementById('graph-point').textContent='Выбранная точка: —'});
+})();
+</script>
