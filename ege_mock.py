@@ -3,8 +3,8 @@ from flask import Blueprint, render_template, request
 from ege_advanced import TASKS, same_answer
 
 bp=Blueprint('ege_mock',__name__)
-# Deterministic and reproducible selection: 12 short answers and 7 extended.
-NUMBERS=list(range(1,20))
+# Deterministic and reproducible selection: 13 short answers and 7 extended (draft 2027).
+NUMBERS=list(range(1,21))
 def tasks_for_variant(v):
     return [sorted((t for t in TASKS if t['num']==n),key=lambda x:x['key'])[(v-1)%len([t for t in TASKS if t['num']==n])] for n in NUMBERS]
 

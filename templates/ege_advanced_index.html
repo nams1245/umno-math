@@ -3,9 +3,9 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='ege_advanced.css') }}">
 <section class="ege-wrap">
-  <div class="ege-top"><span class="ege-tag">ПРОФИЛЬНЫЙ ЕГЭ · МАТЕМАТИКА</span><h1>Новые задания ЕГЭ</h1>
-  <p>Всего {{total}} авторских заданий: № 1–12 — ввод числового ответа, № 13–19 — развёрнутое решение.</p></div>
-  <p><a href="{{url_for('ege_mock.home')}}" class="ege-back">→ Пробный ЕГЭ на 19 заданий с таймером</a></p><div class="ege-filter"><a href="{{ url_for('ege_advanced.index') }}" class="{{'active' if selected is none else ''}}">Все</a>{% for n in range(1,20) %}<a class="{{'active' if selected==n else ''}}" href="{{ url_for('ege_advanced.index', number=n) }}">№ {{n}}</a>{% endfor %}</div>
+  <div class="ege-top"><span class="ege-tag">ПРОФИЛЬНЫЙ ЕГЭ · МАТЕМАТИКА</span><h1>Задания ЕГЭ‑2027</h1>
+  <p>Всего {{total}} авторских заданий: № 1–13 — ввод числового ответа, № 14–20 — развёрнутое решение.</p></div>
+  <p><a href="{{url_for('ege_mock.home')}}" class="ege-back">→ Пробный ЕГЭ на 20 заданий с таймером</a></p><div class="ege-filter"><a href="{{ url_for('ege_advanced.index') }}" class="{{'active' if selected is none else ''}}">Все</a>{% for n in range(1,21) %}<a class="{{'active' if selected==n else ''}}" href="{{ url_for('ege_advanced.index', number=n) }}">№ {{n}}</a>{% endfor %}</div>
   <div class="ege-grid">{% for q in tasks %}<a class="ege-item" href="{{ url_for('ege_advanced.detail', key=q.key) }}"><div class="ege-item-head"><strong>№ {{q.num}}</strong><small>{{q.difficulty}}</small></div><h3>{{q.title}}</h3><p>{{q.body}}</p><span>Решать →</span></a>{% endfor %}</div>
   <p class="ege-note">Задания составлены для тренировки, не скопированы из настоящих экзаменационных вариантов. Некоторые задания первой части проще реальных вариантов. Черновики этого раздела пока не сохраняются.</p>
 </section>

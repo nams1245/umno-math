@@ -93,7 +93,7 @@ def edit_form(task):
         answer = request.form.get('answer','').strip()[:1500]
         solution = request.form.get('solution','').strip()[:30000]
         published = request.form.get('published')=='yes'
-        limit = 25 if exam=='oge' else 19
+        limit = 25 if exam=='oge' else 20
         if exam not in ('oge','ege') or number < 1 or number>limit or not statement or not topic:
             flash('Заполни предмет, номер, тему и условие.','error')
             return render_template('cms_form.html',task=task),400

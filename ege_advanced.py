@@ -75,6 +75,46 @@ for i,(n,title,body,solution,diagram) in enumerate(advanced,1):
     add(f'{n}-{i:02}',n,title,body,None,solution,'повышенный',diagram)
 from ege_plus import TASKS as EXTRA_EGE_TASKS
 TASKS.extend(EXTRA_EGE_TASKS)
+# Transition to the FIPI 2027 draft numbering. Old lesson keys remain stable.
+# The migration below applies only to the independent EGE practice module,
+# not to historical Question/Attempt records in PostgreSQL.
+OLD_TO_2027 = {1:1, 2:2, 3:3, 4:4, 5:5, 6:7, 7:9, 8:11,
+               9:8, 10:10, 11:7, 12:9,
+               13:14, 14:15, 15:16, 16:17, 17:18, 18:19, 19:20}
+for task in TASKS:
+    task['num'] = OLD_TO_2027[task['num']]
+
+# New № 6: random variables, expectation.
+for i, (values, probs, expectation) in enumerate([
+    ((0,2), (0.5,0.5), 1), ((1,5),(0.75,0.25),2),
+    ((2,6),(0.5,0.5),4), ((0,10),(0.7,0.3),3),
+    ((1,4),(1/3,2/3),3), ((3,9),(0.5,0.5),6),
+], 1):
+    x,y=values;p,q=probs
+    add(f'2027-06-{i}',6,'Случайная величина',
+        f'Случайная величина X принимает значения {x} и {y} с вероятностями {p:g} и {q:g}. Найдите математическое ожидание X.',
+        expectation, f'M(X)={x}·{p:g}+{y}·{q:g}={expectation}.','средний')
+
+# New № 12: graph analysis with a numerical answer.
+for i, (a,b) in enumerate([(1,2),(2,3),(3,4),(4,1),(5,2),(6,3)],1):
+    add(f'2027-12-{i}',12,'График квадратичной функции',
+        f'График y=(x−{a})²+{b} — парабола. Найдите её наименьшее значение.',
+        b, f'(x−{a})²≥0, равенство достигается при x={a}; минимум равен {b}.','средний')
+
+# New № 13: financial maths, short numerical answer.
+for i, (principal,percent) in enumerate([(10000,5),(12000,10),(20000,5),(15000,20),(25000,8),(30000,10)],1):
+    profit=principal*percent//100
+    add(f'2027-13-{i}',13,'Личные финансы',
+        f'На банковском вкладе лежит {principal} рублей. За один год банк начисляет {percent}% без дополнительных операций. Сколько рублей процентов начислит банк за год?',
+        profit, f'{principal}·{percent}/100={profit} рублей.','средний')
+
+# New № 17: modelling a real-life situation, extended solution.
+for i,(speed,minutes) in enumerate([(40,30),(60,20),(50,24),(30,40),(80,15),(45,40)],1):
+    dist=speed*minutes//60
+    add(f'2027-17-{i}',17,'Математическое моделирование',
+        f'Автомобиль двигался со скоростью {speed} км/ч в течение {minutes} минут. Постройте модель зависимости пути от времени при постоянной скорости, найдите пройденный путь и объясните размерности.',
+        None, f'При постоянной скорости S(t)={speed}t, где t в часах. Время {minutes}/60 часа, путь {speed}·{minutes}/60={dist} км.','повышенный')
+
 LOOKUP={t['key']:t for t in TASKS}
 assert len(LOOKUP)==len(TASKS)
 
@@ -88,7 +128,7 @@ def same_answer(given, expected):
 @bp.get('/ege/advanced')
 def index():
     num=request.args.get('number',type=int)
-    if num is not None and num not in range(1,20): abort(404)
+    if num is not None and num not in range(1,21): abort(404)
     selected=[t for t in TASKS if num is None or t['num']==num]
     return render_template('ege_advanced_index.html', tasks=selected, selected=num, total=len(TASKS))
 
